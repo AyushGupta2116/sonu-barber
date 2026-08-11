@@ -6,6 +6,7 @@ import {
   Animated,
   Easing,
   FlatList,
+  Linking,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -14,12 +15,20 @@ import {
 } from 'react-native';
 import { SONGS } from './data/songs';
 
-const CANT_PLAY_LINES = [
-  'Yahan sirf trim milta hai, gaana nahi. Sonu bhai se poocho!',
-  'Speaker toota hua hai, bas radio chalta hai dukaan mein.',
-  'Kaenchi chalegi, gaana nahi chalega.',
-  'Ye sirf ek list hai, jukebox nahi.',
-];
+function youtubeSearchUrl(song) {
+  const query = `${song.title} ${song.artist} ${song.movie} song`;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
+
+async function playSong(song) {
+  const url = youtubeSearchUrl(song);
+  const canOpen = await Linking.canOpenURL(url);
+  if (canOpen) {
+    Linking.openURL(url);
+  } else {
+    Alert.alert("Can't Play", 'Could not open YouTube on this device.');
+  }
+}
 
 const COLORS = {
   teal: '#2E8B82',
@@ -127,10 +136,7 @@ function Vinyl({ size = 120 }) {
 }
 
 function SongRow({ item, index }) {
-  const handlePlay = () => {
-    const line = CANT_PLAY_LINES[index % CANT_PLAY_LINES.length];
-    Alert.alert("Can't Play 💈", line);
-  };
+  const handlePlay = () => playSong(item);
 
   return (
     <View style={styles.songCard}>
@@ -179,7 +185,10 @@ export default function App() {
           ))}
         </View>
 
-        <View style={styles.hero}>
+        <Pressable
+          style={({ pressed }) => [styles.hero, pressed && styles.heroPressed]}
+          onPress={() => playSong(SONGS[0])}
+        >
           <Vinyl size={88} />
           <View style={styles.heroText}>
             <Text style={styles.heroLabel}>NOW SPINNING</Text>
@@ -189,9 +198,9 @@ export default function App() {
             <Text style={styles.heroMeta}>
               {SONGS[0].artist} · {SONGS[0].year}
             </Text>
-            <Text style={styles.heroJoke}>Ghoom raha hai, par baja nahi sakte 😅</Text>
+            <Text style={styles.heroJoke}>Tap to play on YouTube ▶</Text>
           </View>
-        </View>
+        </Pressable>
       </View>
 
       <View style={styles.listHeader}>
@@ -333,6 +342,9 @@ const styles = StyleSheet.create({
     width: '88%',
     borderWidth: 1,
     borderColor: 'rgba(221,165,61,0.45)',
+  },
+  heroPressed: {
+    opacity: 0.75,
   },
   heroText: {
     flex: 1,
