@@ -12,13 +12,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { WebView } from 'react-native-webview';
+import Player from './components/Player';
 import { SONGS } from './data/songs';
-
-function youtubeSearchUrl(song) {
-  const query = `${song.title} ${song.artist} ${song.movie} song`;
-  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-}
 
 const COLORS = {
   teal: '#2E8B82',
@@ -236,15 +231,7 @@ export default function App() {
               <Text style={styles.closeButtonText}>✕</Text>
             </Pressable>
           </View>
-          {nowPlaying && (
-            <WebView
-              source={{ uri: youtubeSearchUrl(nowPlaying) }}
-              style={styles.webview}
-              allowsFullscreenVideo
-              javaScriptEnabled
-              mediaPlaybackRequiresUserAction={false}
-            />
-          )}
+          {nowPlaying && <Player videoId={nowPlaying.videoId} style={styles.webview} />}
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
