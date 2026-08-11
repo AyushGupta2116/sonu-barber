@@ -1,0 +1,23 @@
+// Sonu Hair Salon — the only playlist that plays while you get a trim.
+export const SONGS = [
+  { id: '1', title: 'Mere Sapno Ki Rani', artist: 'Kishore Kumar', movie: 'Aradhana', year: 1969 },
+  { id: '2', title: 'Yeh Dosti', artist: 'Kishore Kumar, Manna Dey', movie: 'Sholay', year: 1975 },
+  { id: '3', title: 'Chura Liya Hai Tumne', artist: 'Asha Bhosle, Mohammed Rafi', movie: 'Yaadon Ki Baaraat', year: 1973 },
+  { id: '4', title: 'Roop Tera Mastana', artist: 'Kishore Kumar', movie: 'Aradhana', year: 1969 },
+  { id: '5', title: 'Ek Ladki Bheegi Bhaagi Si', artist: 'Kishore Kumar', movie: 'Chalti Ka Naam Gaadi', year: 1958 },
+  { id: '6', title: 'Mere Mehboob Qayamat Hogi', artist: 'Kishore Kumar', movie: 'Mr. X in Bombay', year: 1964 },
+  { id: '7', title: 'Pal Pal Dil Ke Paas', artist: 'Kishore Kumar', movie: 'Blackmail', year: 1973 },
+  { id: '8', title: 'Aaj Kal Tere Mere Pyaar Ke Charche', artist: 'Kishore Kumar, Lata Mangeshkar', movie: 'Brahmachari', year: 1968 },
+  { id: '9', title: 'Chaudhvin Ka Chand', artist: 'Mohammed Rafi', movie: 'Chaudhvin Ka Chand', year: 1960 },
+  { id: '10', title: 'Baar Baar Dekho', artist: 'Mohammed Rafi', movie: 'China Town', year: 1962 },
+  { id: '11', title: 'Ajeeb Dastan Hai Yeh', artist: 'Lata Mangeshkar', movie: 'Dil Apna Aur Preet Parai', year: 1960 },
+  { id: '12', title: 'Lag Ja Gale', artist: 'Lata Mangeshkar', movie: 'Woh Kaun Thi?', year: 1964 },
+  { id: '13', title: 'Yeh Shaam Mastani', artist: 'Kishore Kumar', movie: 'Kati Patang', year: 1970 },
+  { id: '14', title: 'Gulabi Aankhen', artist: 'Mohammed Rafi', movie: 'The Train', year: 1970 },
+  { id: '15', title: 'O Mere Dil Ke Chain', artist: 'Kishore Kumar', movie: 'Mere Jeevan Saathi', year: 1972 },
+  { id: '16', title: 'Kya Yehi Pyar Hai', artist: 'Kishore Kumar', movie: 'Rocky', year: 1981 },
+  { id: '17', title: 'Dum Maro Dum', artist: 'Asha Bhosle', movie: 'Hare Rama Hare Krishna', year: 1971 },
+  { id: '18', title: 'Chingari Koi Bhadke', artist: 'Kishore Kumar', movie: 'Amar Prem', year: 1972 },
+  { id: '19', title: 'Jai Jai Shiv Shankar', artist: 'Kishore Kumar, Manna Dey', movie: 'Aap Ki Kasam', year: 1974 },
+  { id: '20', title: 'Yeh Jo Mohabbat Hai', artist: 'Kishore Kumar', movie: 'Kati Patang', year: 1970 },
+];
