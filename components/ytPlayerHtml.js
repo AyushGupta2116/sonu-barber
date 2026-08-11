@@ -1,4 +1,4 @@
-export function buildYoutubePlayerHtml(videoId) {
+export function buildYoutubePlayerHtml(videoId, autoplay) {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -15,10 +15,12 @@ export function buildYoutubePlayerHtml(videoId) {
   function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
       videoId: '${videoId}',
-      playerVars: { autoplay: 1, playsinline: 1, rel: 0 },
+      playerVars: { autoplay: ${autoplay ? 1 : 0}, playsinline: 1, rel: 0 },
       events: { onStateChange: onPlayerStateChange }
     });
   }
+  window.__ytPlay = function () { player && player.playVideo && player.playVideo(); };
+  window.__ytPause = function () { player && player.pauseVideo && player.pauseVideo(); };
   function onPlayerStateChange(event) {
     if (event.data === 0) {
       try { window.ReactNativeWebView && window.ReactNativeWebView.postMessage('ENDED'); } catch (e) {}

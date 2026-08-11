@@ -98,21 +98,24 @@ function LivePill() {
   );
 }
 
-function Vinyl({ size = 96 }) {
+function Vinyl({ size = 96, spinning = true }) {
   const spin = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(spin, {
-        toValue: 1,
-        duration: 3600,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [spin]);
+    let loop;
+    if (spinning) {
+      loop = Animated.loop(
+        Animated.timing(spin, {
+          toValue: 1,
+          duration: 3600,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      loop.start();
+    }
+    return () => loop && loop.stop();
+  }, [spin, spinning]);
 
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
@@ -189,7 +192,7 @@ function SongRow({ item, index, onPlay }) {
         </Text>
       </View>
       <Pressable
-        onPress={() => onPlay(item)}
+        onPress={() => onPlay(index)}
         style={({ pressed }) => [styles.playButton, pressed && styles.playButtonPressed]}
         hitSlop={8}
       >
@@ -200,27 +203,35 @@ function SongRow({ item, index, onPlay }) {
 }
 
 export default function App() {
-  const [nowPlaying, setNowPlaying] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
 
+  const current = SONGS[currentIndex];
+
   const playNext = () => {
-    setNowPlaying((current) => {
-      if (!current) return current;
-      const i = SONGS.findIndex((s) => s.id === current.id);
-      if (i === -1) return current;
-      return SONGS[(i + 1) % SONGS.length];
-    });
+    setCurrentIndex((i) => (i + 1) % SONGS.length);
+    setIsPlaying(true);
   };
 
   const shuffle = () => {
-    setNowPlaying(SONGS[Math.floor(Math.random() * SONGS.length)]);
+    setCurrentIndex(Math.floor(Math.random() * SONGS.length));
+    setIsPlaying(true);
   };
 
-  const current = nowPlaying || SONGS[0];
+  const playFromList = (index) => {
+    setCurrentIndex(index);
+    setIsPlaying(true);
+    setShowPlaylist(false);
+  };
+
+  const togglePlay = () => setIsPlaying((p) => !p);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
+
+      <Player videoId={current.videoId} playing={isPlaying} onEnded={playNext} />
 
       <View style={StyleSheet.absoluteFill}>
         <GlowOrbs />
@@ -238,9 +249,9 @@ export default function App() {
         <Text style={styles.tagline}>Purane gaane, non-stop</Text>
 
         <BlurView intensity={40} tint="dark" style={styles.nowCard}>
-          <Vinyl size={88} />
+          <Vinyl size={88} spinning={isPlaying} />
           <View style={styles.nowText}>
-            <Text style={styles.nowLabel}>AB BAJ RAHA HAI</Text>
+            <Text style={styles.nowLabel}>{isPlaying ? 'AB BAJ RAHA HAI' : 'READY'}</Text>
             <Text style={styles.nowTitle} numberOfLines={1}>
               {current.title}
             </Text>
@@ -252,9 +263,9 @@ export default function App() {
 
         <Pressable
           style={({ pressed }) => [styles.playBig, pressed && styles.playBigPressed]}
-          onPress={() => setNowPlaying(current)}
+          onPress={togglePlay}
         >
-          <Text style={styles.playBigIcon}>▶</Text>
+          <Text style={styles.playBigIcon}>{isPlaying ? '⏸' : '▶'}</Text>
         </Pressable>
 
         <View style={styles.pillRow}>
@@ -289,47 +300,11 @@ export default function App() {
             data={SONGS}
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => (
-              <SongRow
-                item={item}
-                index={index}
-                onPlay={(song) => {
-                  setNowPlaying(song);
-                  setShowPlaylist(false);
-                }}
-              />
+              <SongRow item={item} index={index} onPlay={playFromList} />
             )}
             contentContainerStyle={styles.listContent}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
           />
-        </SafeAreaView>
-      </Modal>
-
-      <Modal
-        visible={!!nowPlaying}
-        animationType="slide"
-        onRequestClose={() => setNowPlaying(null)}
-      >
-        <SafeAreaView style={styles.playerScreen}>
-          <View style={styles.playerBar}>
-            <View style={styles.playerBarText}>
-              <Text style={styles.playerTitle} numberOfLines={1}>
-                {nowPlaying?.title}
-              </Text>
-              <Text style={styles.playerSubtitle} numberOfLines={1}>
-                {nowPlaying?.artist} · {nowPlaying?.movie}
-              </Text>
-            </View>
-            <Pressable
-              onPress={() => setNowPlaying(null)}
-              style={styles.closeButton}
-              hitSlop={8}
-            >
-              <Text style={styles.closeButtonText}>✕</Text>
-            </Pressable>
-          </View>
-          {nowPlaying && (
-            <Player videoId={nowPlaying.videoId} onEnded={playNext} style={styles.webview} />
-          )}
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -611,32 +586,6 @@ const styles = StyleSheet.create({
   separator: {
     height: 10,
   },
-  playerScreen: {
-    flex: 1,
-    backgroundColor: '#0A0A0A',
-  },
-  playerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.bgDeep,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.glassBorder,
-  },
-  playerBarText: {
-    flex: 1,
-  },
-  playerTitle: {
-    color: COLORS.cream,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  playerSubtitle: {
-    color: COLORS.fade,
-    fontSize: 12,
-    marginTop: 1,
-  },
   closeButton: {
     width: 32,
     height: 32,
@@ -650,8 +599,5 @@ const styles = StyleSheet.create({
     color: COLORS.ink,
     fontSize: 15,
     fontWeight: '800',
-  },
-  webview: {
-    flex: 1,
   },
 });
