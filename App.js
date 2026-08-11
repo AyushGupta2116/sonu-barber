@@ -1,33 +1,19 @@
-import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import {
-  Animated,
-  Easing,
-  FlatList,
-  Modal,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Animated, Easing, ScrollView, StyleSheet, Text, View } from 'react-native';
 import FloatingParticles from './components/FloatingParticles';
 import GlowOrbs from './components/GlowOrbs';
-import Player from './components/Player';
-import { SONGS } from './data/songs';
+import SpotifyPlayer from './components/SpotifyPlayer';
+
+const PLAYLIST_ID = '5AWPibtqW7T2ztILARMhlA';
 
 const COLORS = {
   bg: '#170A03',
-  bgDeep: '#0F0602',
   amber: '#F5A623',
-  amberDeep: '#D9860F',
-  green: '#3E8F63',
   glass: 'rgba(35,19,9,0.55)',
   glassBorder: 'rgba(245,166,35,0.3)',
   cream: '#FBF1DE',
   fade: 'rgba(251,241,222,0.62)',
-  ink: '#1D0F05',
 };
 
 function useClock() {
@@ -98,140 +84,10 @@ function LivePill() {
   );
 }
 
-function Vinyl({ size = 96, spinning = true }) {
-  const spin = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    let loop;
-    if (spinning) {
-      loop = Animated.loop(
-        Animated.timing(spin, {
-          toValue: 1,
-          duration: 3600,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      );
-      loop.start();
-    }
-    return () => loop && loop.stop();
-  }, [spin, spinning]);
-
-  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-
-  const ring = (ratio, borderColor) => {
-    const d = size * ratio;
-    return {
-      position: 'absolute',
-      width: d,
-      height: d,
-      borderRadius: d / 2,
-      top: (size - d) / 2,
-      left: (size - d) / 2,
-      borderWidth: 1,
-      borderColor,
-    };
-  };
-
-  const labelSize = size * 0.36;
-  const holeSize = size * 0.07;
-
-  return (
-    <Animated.View
-      style={[
-        styles.vinylDisc,
-        { width: size, height: size, borderRadius: size / 2, transform: [{ rotate }] },
-      ]}
-    >
-      <View style={ring(0.94, 'rgba(245,166,35,0.3)')} />
-      <View style={ring(0.78, 'rgba(245,166,35,0.2)')} />
-      <View style={ring(0.6, 'rgba(245,166,35,0.2)')} />
-      <View style={ring(0.44, 'rgba(245,166,35,0.3)')} />
-      <View
-        style={[
-          styles.vinylLabel,
-          {
-            width: labelSize,
-            height: labelSize,
-            borderRadius: labelSize / 2,
-            top: (size - labelSize) / 2,
-            left: (size - labelSize) / 2,
-          },
-        ]}
-      >
-        <Text style={styles.vinylLabelText}>SONU</Text>
-      </View>
-      <View
-        style={[
-          styles.vinylHole,
-          {
-            width: holeSize,
-            height: holeSize,
-            borderRadius: holeSize / 2,
-            top: (size - holeSize) / 2,
-            left: (size - holeSize) / 2,
-          },
-        ]}
-      />
-    </Animated.View>
-  );
-}
-
-function SongRow({ item, index, onPlay }) {
-  return (
-    <View style={styles.songCard}>
-      <View style={styles.trackBadge}>
-        <Text style={styles.trackBadgeText}>{index + 1}</Text>
-      </View>
-      <View style={styles.songInfo}>
-        <Text style={styles.songTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text style={styles.songMeta} numberOfLines={1}>
-          {item.artist} · {item.movie} ({item.year})
-        </Text>
-      </View>
-      <Pressable
-        onPress={() => onPlay(index)}
-        style={({ pressed }) => [styles.playButton, pressed && styles.playButtonPressed]}
-        hitSlop={8}
-      >
-        <Text style={styles.playIcon}>▶</Text>
-      </Pressable>
-    </View>
-  );
-}
-
 export default function App() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showPlaylist, setShowPlaylist] = useState(false);
-
-  const current = SONGS[currentIndex];
-
-  const playNext = () => {
-    setCurrentIndex((i) => (i + 1) % SONGS.length);
-    setIsPlaying(true);
-  };
-
-  const shuffle = () => {
-    setCurrentIndex(Math.floor(Math.random() * SONGS.length));
-    setIsPlaying(true);
-  };
-
-  const playFromList = (index) => {
-    setCurrentIndex(index);
-    setIsPlaying(true);
-    setShowPlaylist(false);
-  };
-
-  const togglePlay = () => setIsPlaying((p) => !p);
-
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar style="light" />
-
-      <Player videoId={current.videoId} playing={isPlaying} onEnded={playNext} />
 
       <View style={StyleSheet.absoluteFill}>
         <GlowOrbs />
@@ -243,71 +99,23 @@ export default function App() {
         <LivePill />
       </View>
 
-      <View style={styles.center}>
+      <ScrollView
+        contentContainerStyle={styles.center}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.brand}>SONU</Text>
         <Text style={styles.brandHindi}>सोनू सैलून रेडियो</Text>
         <Text style={styles.tagline}>Purane gaane, non-stop</Text>
 
-        <BlurView intensity={40} tint="dark" style={styles.nowCard}>
-          <Vinyl size={88} spinning={isPlaying} />
-          <View style={styles.nowText}>
-            <Text style={styles.nowLabel}>{isPlaying ? 'AB BAJ RAHA HAI' : 'READY'}</Text>
-            <Text style={styles.nowTitle} numberOfLines={1}>
-              {current.title}
-            </Text>
-            <Text style={styles.nowMeta} numberOfLines={1}>
-              {current.artist} · {current.year}
-            </Text>
-          </View>
-        </BlurView>
-
-        <Pressable
-          style={({ pressed }) => [styles.playBig, pressed && styles.playBigPressed]}
-          onPress={togglePlay}
-        >
-          <Text style={styles.playBigIcon}>{isPlaying ? '⏸' : '▶'}</Text>
-        </Pressable>
-
-        <View style={styles.pillRow}>
-          <Pressable style={styles.pillBtn} onPress={shuffle}>
-            <Text style={styles.pillBtnText}>🔀 Shuffle</Text>
-          </Pressable>
-          <Pressable style={styles.pillBtn} onPress={() => setShowPlaylist(true)}>
-            <Text style={styles.pillBtnText}>📜 Playlist</Text>
-          </Pressable>
+        <View style={styles.playerCard}>
+          <SpotifyPlayer playlistId={PLAYLIST_ID} style={styles.spotifyEmbed} />
         </View>
-      </View>
 
-      <Text style={styles.footerCredit}>💈 Sonu Hair Salon — jahan katting aur gaana saath chalta hai</Text>
-
-      <Modal
-        visible={showPlaylist}
-        animationType="slide"
-        onRequestClose={() => setShowPlaylist(false)}
-      >
-        <SafeAreaView style={styles.playlistScreen}>
-          <View style={styles.playlistBar}>
-            <Text style={styles.playlistTitle}>Poora Playlist</Text>
-            <Pressable
-              onPress={() => setShowPlaylist(false)}
-              style={styles.closeButton}
-              hitSlop={8}
-            >
-              <Text style={styles.closeButtonText}>✕</Text>
-            </Pressable>
-          </View>
-          <FlatList
-            data={SONGS}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item, index }) => (
-              <SongRow item={item} index={index} onPlay={playFromList} />
-            )}
-            contentContainerStyle={styles.listContent}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-          />
-        </SafeAreaView>
-      </Modal>
-    </SafeAreaView>
+        <Text style={styles.footerCredit}>
+          💈 Sonu Hair Salon — jahan katting aur gaana saath chalta hai
+        </Text>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -321,7 +129,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 18,
-    paddingTop: 10,
+    paddingTop: 54,
+    paddingBottom: 6,
   },
   timePill: {
     flexDirection: 'row',
@@ -378,10 +187,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   center: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 40,
   },
   brand: {
     color: COLORS.cream,
@@ -402,202 +211,26 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 22,
   },
-  nowCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  playerCard: {
     width: '100%',
-    borderRadius: 22,
-    padding: 14,
+    maxWidth: 420,
+    borderRadius: 18,
+    padding: 10,
     borderWidth: 1,
     borderColor: COLORS.glassBorder,
-    overflow: 'hidden',
     backgroundColor: COLORS.glass,
   },
-  vinylDisc: {
-    backgroundColor: '#120800',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(245,166,35,0.4)',
-    overflow: 'hidden',
-  },
-  vinylLabel: {
-    position: 'absolute',
-    backgroundColor: COLORS.amber,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.ink,
-  },
-  vinylLabelText: {
-    color: COLORS.ink,
-    fontSize: 8,
-    fontWeight: '800',
-  },
-  vinylHole: {
-    position: 'absolute',
-    backgroundColor: COLORS.cream,
-  },
-  nowText: {
-    flex: 1,
-    marginLeft: 14,
-  },
-  nowLabel: {
-    color: COLORS.amber,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  nowTitle: {
-    color: COLORS.cream,
-    fontSize: 17,
-    fontWeight: '700',
-    marginTop: 3,
-  },
-  nowMeta: {
-    color: COLORS.fade,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  playBig: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-    backgroundColor: COLORS.amber,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 26,
-    shadowColor: COLORS.amber,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  playBigPressed: {
-    opacity: 0.75,
-  },
-  playBigIcon: {
-    color: COLORS.ink,
-    fontSize: 28,
-    marginLeft: 4,
-  },
-  pillRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
-  },
-  pillBtn: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: COLORS.glass,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-  },
-  pillBtnText: {
-    color: COLORS.cream,
-    fontSize: 13,
-    fontWeight: '600',
+  spotifyEmbed: {
+    width: '100%',
+    height: 500,
+    borderRadius: 12,
   },
   footerCredit: {
     textAlign: 'center',
     color: COLORS.fade,
     fontSize: 11,
     fontStyle: 'italic',
-    paddingBottom: 14,
+    marginTop: 20,
     paddingHorizontal: 24,
-  },
-  playlistScreen: {
-    flex: 1,
-    backgroundColor: COLORS.bgDeep,
-  },
-  playlistBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
-  },
-  playlistTitle: {
-    color: COLORS.cream,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
-  },
-  songCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.glass,
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-  },
-  trackBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.green,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  trackBadgeText: {
-    color: COLORS.cream,
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  songInfo: {
-    flex: 1,
-  },
-  songTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.cream,
-  },
-  songMeta: {
-    fontSize: 11,
-    color: COLORS.fade,
-    marginTop: 2,
-  },
-  playButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.amber,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 10,
-  },
-  playButtonPressed: {
-    opacity: 0.6,
-  },
-  playIcon: {
-    color: COLORS.ink,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  separator: {
-    height: 10,
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.amber,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 12,
-  },
-  closeButtonText: {
-    color: COLORS.ink,
-    fontSize: 15,
-    fontWeight: '800',
   },
 });
