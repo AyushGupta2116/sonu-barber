@@ -20,14 +20,11 @@ function youtubeSearchUrl(song) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 }
 
-async function playSong(song) {
+function playSong(song) {
   const url = youtubeSearchUrl(song);
-  const canOpen = await Linking.canOpenURL(url);
-  if (canOpen) {
-    Linking.openURL(url);
-  } else {
+  Linking.openURL(url).catch(() => {
     Alert.alert("Can't Play", 'Could not open YouTube on this device.');
-  }
+  });
 }
 
 const COLORS = {
