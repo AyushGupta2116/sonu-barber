@@ -1,13 +1,20 @@
 import { WebView } from 'react-native-webview';
+import { buildYoutubePlayerHtml } from './ytPlayerHtml';
 
-export default function Player({ videoId, style }) {
+export default function Player({ videoId, onEnded, style }) {
   return (
     <WebView
-      source={{ uri: `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1` }}
+      key={videoId}
+      originWhitelist={['*']}
+      source={{ html: buildYoutubePlayerHtml(videoId) }}
       style={style}
       allowsFullscreenVideo
       javaScriptEnabled
+      domStorageEnabled
       mediaPlaybackRequiresUserAction={false}
+      onMessage={(event) => {
+        if (event.nativeEvent.data === 'ENDED' && onEnded) onEnded();
+      }}
     />
   );
 }

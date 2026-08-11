@@ -35,6 +35,63 @@ const COLORS = {
   poleBlue: '#1E3A8B',
 };
 
+function BarberPole({ height = 100, width = 22 }) {
+  const scroll = useRef(new Animated.Value(0)).current;
+  const stripeGap = 16;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(scroll, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [scroll]);
+
+  const translateY = scroll.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, stripeGap],
+  });
+
+  const innerHeight = height + stripeGap * 3;
+  const stripeCount = Math.ceil(innerHeight / stripeGap) + 2;
+
+  return (
+    <View style={[styles.poleWrap, { width: width + 8 }]}>
+      <View style={styles.poleCap} />
+      <View style={[styles.poleCylinder, { height, width }]}>
+        <Animated.View
+          style={{
+            position: 'absolute',
+            left: -width * 0.6,
+            right: -width * 0.6,
+            top: -stripeGap,
+            transform: [{ translateY }],
+          }}
+        >
+          {Array.from({ length: stripeCount }).map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.poleStripe,
+                {
+                  top: i * stripeGap,
+                  backgroundColor: i % 2 === 0 ? COLORS.maroon : COLORS.poleBlue,
+                },
+              ]}
+            />
+          ))}
+        </Animated.View>
+      </View>
+      <View style={styles.poleCap} />
+    </View>
+  );
+}
+
 function Vinyl({ size = 120 }) {
   const spin = useRef(new Animated.Value(0)).current;
 
@@ -148,22 +205,39 @@ function SongRow({ item, index, onPlay }) {
 export default function App() {
   const [nowPlaying, setNowPlaying] = useState(null);
 
+  const playNext = () => {
+    setNowPlaying((current) => {
+      if (!current) return current;
+      const i = SONGS.findIndex((s) => s.id === current.id);
+      if (i === -1) return current;
+      return SONGS[(i + 1) % SONGS.length];
+    });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
 
       <View style={styles.shopFront}>
-        <View style={styles.signBoard}>
-          <LinearGradient
-            colors={[COLORS.mustard, COLORS.mustardDark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.signBoardInner}
-          >
-            <Text style={styles.signSonu}>Sonu</Text>
-            <Text style={styles.signMain}>HAIR CUTTING SALOON</Text>
-            <Text style={styles.signHindi}>सोनू केश कर्तनालय</Text>
-          </LinearGradient>
+        <View style={styles.signRow}>
+          <BarberPole height={92} />
+
+          <View style={styles.signBoard}>
+            <LinearGradient
+              colors={[COLORS.mustard, COLORS.mustardDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.signBoardInner}
+            >
+              <Text style={styles.signComb}>💈 ✂️ 💈</Text>
+              <Text style={styles.signSonu}>Sonu</Text>
+              <Text style={styles.signMain}>HAIR CUTTING SALOON</Text>
+              <Text style={styles.signHindi}>सोनू केश कर्तनालय</Text>
+              <Text style={styles.signEst}>EST. SINCE FOREVER</Text>
+            </LinearGradient>
+          </View>
+
+          <BarberPole height={92} />
         </View>
 
         <View style={styles.shutterGrille}>
@@ -231,7 +305,9 @@ export default function App() {
               <Text style={styles.closeButtonText}>✕</Text>
             </Pressable>
           </View>
-          {nowPlaying && <Player videoId={nowPlaying.videoId} style={styles.webview} />}
+          {nowPlaying && (
+            <Player videoId={nowPlaying.videoId} onEnded={playNext} style={styles.webview} />
+          )}
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -251,12 +327,46 @@ const styles = StyleSheet.create({
     borderBottomWidth: 5,
     borderBottomColor: COLORS.tealDark,
   },
+  signRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  poleWrap: {
+    alignItems: 'center',
+  },
+  poleCap: {
+    width: 26,
+    height: 8,
+    borderRadius: 3,
+    backgroundColor: '#C9C9C9',
+    borderWidth: 1,
+    borderColor: '#8A8A8A',
+  },
+  poleCylinder: {
+    borderRadius: 11,
+    overflow: 'hidden',
+    backgroundColor: COLORS.poleWhite,
+    borderWidth: 1.5,
+    borderColor: '#8A8A8A',
+    marginVertical: 2,
+  },
+  poleStripe: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 16,
+    transform: [{ rotate: '35deg' }],
+  },
   signBoard: {
-    width: '90%',
+    flex: 1,
+    maxWidth: '70%',
     borderWidth: 3,
     borderColor: COLORS.signBorder,
     borderRadius: 4,
     overflow: 'hidden',
+    transform: [{ rotate: '-0.6deg' }],
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.35,
@@ -268,6 +378,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 10,
   },
+  signComb: {
+    fontSize: 13,
+    marginBottom: 2,
+    letterSpacing: 2,
+  },
   signSonu: {
     fontSize: 22,
     fontWeight: '700',
@@ -278,10 +393,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 1,
   },
   signMain: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '900',
     color: COLORS.signRed,
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
     marginTop: 2,
     textAlign: 'center',
     textShadowColor: 'rgba(255,255,255,0.25)',
@@ -293,6 +408,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.signGreen,
     marginTop: 4,
+  },
+  signEst: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: 'rgba(58,42,18,0.55)',
+    letterSpacing: 1.5,
+    marginTop: 5,
   },
   shutterGrille: {
     flexDirection: 'row',
