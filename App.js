@@ -1,30 +1,23 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Animated,
   Easing,
   FlatList,
-  Linking,
+  Modal,
   Pressable,
   SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { SONGS } from './data/songs';
 
 function youtubeSearchUrl(song) {
   const query = `${song.title} ${song.artist} ${song.movie} song`;
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-}
-
-function playSong(song) {
-  const url = youtubeSearchUrl(song);
-  Linking.openURL(url).catch(() => {
-    Alert.alert("Can't Play", 'Could not open YouTube on this device.');
-  });
 }
 
 const COLORS = {
@@ -132,8 +125,8 @@ function Vinyl({ size = 120 }) {
   );
 }
 
-function SongRow({ item, index }) {
-  const handlePlay = () => playSong(item);
+function SongRow({ item, index, onPlay }) {
+  const handlePlay = () => onPlay(item);
 
   return (
     <View style={styles.songCard}>
@@ -158,6 +151,8 @@ function SongRow({ item, index }) {
 }
 
 export default function App() {
+  const [nowPlaying, setNowPlaying] = useState(null);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
@@ -184,7 +179,7 @@ export default function App() {
 
         <Pressable
           style={({ pressed }) => [styles.hero, pressed && styles.heroPressed]}
-          onPress={() => playSong(SONGS[0])}
+          onPress={() => setNowPlaying(SONGS[0])}
         >
           <Vinyl size={88} />
           <View style={styles.heroText}>
@@ -195,7 +190,7 @@ export default function App() {
             <Text style={styles.heroMeta}>
               {SONGS[0].artist} · {SONGS[0].year}
             </Text>
-            <Text style={styles.heroJoke}>Tap to play on YouTube ▶</Text>
+            <Text style={styles.heroJoke}>Tap to play ▶</Text>
           </View>
         </Pressable>
       </View>
@@ -208,13 +203,50 @@ export default function App() {
       <FlatList
         data={SONGS}
         keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => <SongRow item={item} index={index} />}
+        renderItem={({ item, index }) => (
+          <SongRow item={item} index={index} onPlay={setNowPlaying} />
+        )}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListFooterComponent={
           <Text style={styles.footerNote}>💈 Baal chhote, yaadein lambi. Phir milenge!</Text>
         }
       />
+
+      <Modal
+        visible={!!nowPlaying}
+        animationType="slide"
+        onRequestClose={() => setNowPlaying(null)}
+      >
+        <SafeAreaView style={styles.playerScreen}>
+          <View style={styles.playerBar}>
+            <View style={styles.playerBarText}>
+              <Text style={styles.playerTitle} numberOfLines={1}>
+                {nowPlaying?.title}
+              </Text>
+              <Text style={styles.playerSubtitle} numberOfLines={1}>
+                {nowPlaying?.artist} · {nowPlaying?.movie}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => setNowPlaying(null)}
+              style={styles.closeButton}
+              hitSlop={8}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </Pressable>
+          </View>
+          {nowPlaying && (
+            <WebView
+              source={{ uri: youtubeSearchUrl(nowPlaying) }}
+              style={styles.webview}
+              allowsFullscreenVideo
+              javaScriptEnabled
+              mediaPlaybackRequiresUserAction={false}
+            />
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -457,5 +489,48 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(241,234,217,0.6)',
     fontStyle: 'italic',
+  },
+  playerScreen: {
+    flex: 1,
+    backgroundColor: COLORS.tealDeep,
+  },
+  playerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.teal,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 3,
+    borderBottomColor: COLORS.tealDark,
+  },
+  playerBarText: {
+    flex: 1,
+  },
+  playerTitle: {
+    color: COLORS.cream,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  playerSubtitle: {
+    color: 'rgba(241,234,217,0.7)',
+    fontSize: 12,
+    marginTop: 1,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.mustard,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 12,
+  },
+  closeButtonText: {
+    color: COLORS.signBorder,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  webview: {
+    flex: 1,
   },
 });
