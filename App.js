@@ -1,20 +1,79 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Animated,
+  Easing,
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import FloatingParticles from './components/FloatingParticles';
 import GlowOrbs from './components/GlowOrbs';
 import SpotifyPlayer from './components/SpotifyPlayer';
 
 const PLAYLIST_ID = '5AWPibtqW7T2ztILARMhlA';
+const PLAYLIST_URL = `https://open.spotify.com/playlist/${PLAYLIST_ID}`;
+const INSTAGRAM_HANDLE = 'ayussssssssh.21';
+const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_HANDLE}`;
 
 const COLORS = {
   bg: '#170A03',
   amber: '#F5A623',
+  red: '#B3282D',
   glass: 'rgba(35,19,9,0.55)',
   glassBorder: 'rgba(245,166,35,0.3)',
   cream: '#FBF1DE',
   fade: 'rgba(251,241,222,0.62)',
 };
+
+function BarberPole({ height = 44, width = 12 }) {
+  const scroll = useRef(new Animated.Value(0)).current;
+  const stripeGap = 10;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(scroll, {
+        toValue: 1,
+        duration: 700,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [scroll]);
+
+  const translateY = scroll.interpolate({ inputRange: [0, 1], outputRange: [0, stripeGap] });
+  const innerHeight = height + stripeGap * 3;
+  const stripeCount = Math.ceil(innerHeight / stripeGap) + 2;
+
+  return (
+    <View style={[styles.poleCylinder, { height, width }]}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          left: -width * 0.6,
+          right: -width * 0.6,
+          top: -stripeGap,
+          transform: [{ translateY }],
+        }}
+      >
+        {Array.from({ length: stripeCount }).map((_, i) => (
+          <View
+            key={i}
+            style={[
+              styles.poleStripe,
+              { top: i * stripeGap, backgroundColor: i % 2 === 0 ? COLORS.red : '#1E3A8B' },
+            ]}
+          />
+        ))}
+      </Animated.View>
+    </View>
+  );
+}
 
 function useClock() {
   const [now, setNow] = useState(new Date());
@@ -103,13 +162,33 @@ export default function App() {
         contentContainerStyle={styles.center}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.brand}>SONU</Text>
-        <Text style={styles.brandHindi}>सोनू सैलून रेडियो</Text>
-        <Text style={styles.tagline}>Purane gaane, non-stop</Text>
+        <View style={styles.brandRow}>
+          <BarberPole />
+          <View style={styles.brandTextWrap}>
+            <Text style={styles.brand}>SALON WALA</Text>
+            <Text style={styles.brandHindi}>सैलून वाला</Text>
+          </View>
+          <BarberPole />
+        </View>
+        <Text style={styles.tagline}>✂️ Sonu Hair Salon Radio — purane gaane, non-stop 💈</Text>
 
         <View style={styles.playerCard}>
           <SpotifyPlayer playlistId={PLAYLIST_ID} style={styles.spotifyEmbed} />
         </View>
+
+        <Pressable
+          style={({ pressed }) => [styles.spotifyLink, pressed && styles.spotifyLinkPressed]}
+          onPress={() => Linking.openURL(PLAYLIST_URL)}
+        >
+          <Text style={styles.spotifyLinkText}>Skip not working? Open in Spotify ↗</Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [styles.igPill, pressed && styles.igPillPressed]}
+          onPress={() => Linking.openURL(INSTAGRAM_URL)}
+        >
+          <Text style={styles.igPillText}>📸 @{INSTAGRAM_HANDLE}</Text>
+        </Pressable>
 
         <Text style={styles.footerCredit}>
           💈 Sonu Hair Salon — jahan katting aur gaana saath chalta hai
@@ -192,11 +271,34 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 40,
   },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 14,
+  },
+  brandTextWrap: {
+    alignItems: 'center',
+  },
+  poleCylinder: {
+    borderRadius: 999,
+    overflow: 'hidden',
+    backgroundColor: COLORS.cream,
+    borderWidth: 1.5,
+    borderColor: '#8A8A8A',
+  },
+  poleStripe: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 10,
+    transform: [{ rotate: '35deg' }],
+  },
   brand: {
     color: COLORS.cream,
-    fontSize: 34,
+    fontSize: 26,
     fontWeight: '900',
-    letterSpacing: 4,
+    letterSpacing: 2,
   },
   brandHindi: {
     color: COLORS.amber,
@@ -208,8 +310,43 @@ const styles = StyleSheet.create({
     color: COLORS.fade,
     fontSize: 12,
     fontStyle: 'italic',
-    marginTop: 4,
+    marginTop: 8,
     marginBottom: 22,
+    textAlign: 'center',
+  },
+  spotifyLink: {
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: COLORS.glass,
+    borderWidth: 1,
+    borderColor: COLORS.glassBorder,
+  },
+  spotifyLinkPressed: {
+    opacity: 0.7,
+  },
+  spotifyLinkText: {
+    color: COLORS.amber,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  igPill: {
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: COLORS.glass,
+    borderWidth: 1,
+    borderColor: COLORS.glassBorder,
+  },
+  igPillPressed: {
+    opacity: 0.7,
+  },
+  igPillText: {
+    color: COLORS.cream,
+    fontSize: 12,
+    fontWeight: '600',
   },
   playerCard: {
     width: '100%',

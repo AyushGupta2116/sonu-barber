@@ -10,6 +10,8 @@ export default function SpotifyPlayer({ playlistId, style }) {
       domStorageEnabled
       mediaPlaybackRequiresUserAction={false}
       allowsInlineMediaPlayback
+      thirdPartyCookiesEnabled
+      sharedCookiesEnabled
     />
   );
 }
